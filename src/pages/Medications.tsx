@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import type { AppData } from '../App';
+import type { Translations } from '../App';
 
 interface Props {
-  data: AppData;
-  setData: React.Dispatch<React.SetStateAction<AppData>>;
+  data: any;
+  setData: React.Dispatch<React.SetStateAction<any>>;
   onNavigate: (page: 'home' | 'checkin' | 'meds' | 'messages' | 'health' | 'settings') => void;
+  t: Translations;
 }
 
-export default function Medications({ data, setData, onNavigate }: Props) {
+export default function Medications({ data, setData, onNavigate, t }: Props) {
   const { medications } = data;
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
-  const takenCount = medications.filter(m => m.taken).length;
+  const takenCount = medications.filter((m: any) => m.taken).length;
   const totalCount = medications.length;
 
   const handleTakeMed = (id: string) => {
@@ -19,16 +20,16 @@ export default function Medications({ data, setData, onNavigate }: Props) {
   };
 
   const confirmTake = () => {
-    setData(prev => ({
+    setData((prev: any) => ({
       ...prev,
-      medications: prev.medications.map(m =>
+      medications: prev.medications.map((m: any) =>
         m.id === confirmId ? { ...m, taken: true } : m
       ),
     }));
     setConfirmId(null);
   };
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const today = new Date().toLocaleDateString(data.language === 'zh' ? 'zh-CN' : data.language === 'my' ? 'my-MM' : 'en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -36,29 +37,26 @@ export default function Medications({ data, setData, onNavigate }: Props) {
 
   return (
     <div>
-      {/* Header */}
       <div style={{ marginBottom: 'var(--space-xl)' }}>
         <button 
           className="btn btn-secondary"
           onClick={() => onNavigate('home')}
           style={{ marginBottom: 'var(--space-md)' }}
         >
-          ← Back
+          ← {t.back}
         </button>
-        <h1 className="section-title">💊 Medications</h1>
+        <h1 className="section-title">💊 {t.medications}</h1>
       </div>
 
-      {/* Today's Date */}
       <div className="card" style={{ background: 'var(--color-primary)', color: 'white', marginBottom: 'var(--space-xl)' }}>
         <p style={{ textAlign: 'center', fontSize: 'var(--font-size-xl)' }}>{today}</p>
       </div>
 
-      {/* Progress */}
       <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-          <h2 style={{ fontWeight: 600 }}>Today's Progress</h2>
+          <h2 style={{ fontWeight: 600 }}>{t.todaysProgress}</h2>
           <span className="badge badge-success">
-            {takenCount}/{totalCount} taken
+            {takenCount}/{totalCount} {t.taken}
           </span>
         </div>
         <div style={{ 
@@ -77,20 +75,18 @@ export default function Medications({ data, setData, onNavigate }: Props) {
         </div>
       </div>
 
-      {/* Medications List */}
       <div className="section">
-        <h2 className="section-title" style={{ marginBottom: 'var(--space-md)' }}>Schedule</h2>
+        <h2 className="section-title" style={{ marginBottom: 'var(--space-md)' }}>{t.schedule}</h2>
         
         {medications.length === 0 ? (
           <div className="card">
             <div className="empty-state">
               <div className="empty-icon">💊</div>
-              <p className="empty-title">No Medications</p>
-              <p className="empty-text">You don't have any medications added yet.</p>
+              <p className="empty-title">{t.noMedications}</p>
             </div>
           </div>
         ) : (
-          medications.map(med => (
+          medications.map((med: any) => (
             <div key={med.id} className="med-card">
               <div className="med-info">
                 <span className="med-icon">💊</span>
@@ -105,7 +101,7 @@ export default function Medications({ data, setData, onNavigate }: Props) {
               {med.taken ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
                   <span style={{ fontSize: 20 }}>✅</span>
-                  <span className="badge badge-success">Taken</span>
+                  <span className="badge badge-success">{t.taken}</span>
                 </div>
               ) : confirmId === med.id ? (
                 <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
@@ -114,7 +110,7 @@ export default function Medications({ data, setData, onNavigate }: Props) {
                     onClick={confirmTake}
                     style={{ minHeight: 56, padding: '12px 16px' }}
                   >
-                    ✓ Yes
+                    ✓ {t.yes}
                   </button>
                   <button 
                     className="btn btn-secondary"
@@ -130,7 +126,7 @@ export default function Medications({ data, setData, onNavigate }: Props) {
                   onClick={() => handleTakeMed(med.id)}
                   style={{ minHeight: 56, padding: '12px 20px' }}
                 >
-                  ✓ Take
+                  ✓ {t.taken}
                 </button>
               )}
             </div>
@@ -138,25 +134,23 @@ export default function Medications({ data, setData, onNavigate }: Props) {
         )}
       </div>
 
-      {/* All Done Message */}
       {takenCount === totalCount && totalCount > 0 && (
         <div className="alert-banner alert-banner-success">
           <span className="alert-icon">🎉</span>
           <div className="alert-content">
-            <div className="alert-title">All Done!</div>
-            <div className="alert-message">You've taken all your medications today.</div>
+            <div className="alert-title">{t.allDone}</div>
+            <div className="alert-message">{t.allTakenToday}</div>
           </div>
         </div>
       )}
 
-      {/* Info */}
       <div className="card" style={{ background: 'rgba(78, 159, 159, 0.1)', marginTop: 'var(--space-lg)' }}>
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
           <span style={{ fontSize: 32 }}>ℹ️</span>
           <div>
-            <h3 style={{ fontWeight: 600, marginBottom: 'var(--space-xs)' }}>About Medications</h3>
+            <h3 style={{ fontWeight: 600, marginBottom: 'var(--space-xs)' }}>{t.aboutMedications}</h3>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Your medications are managed by your family. If you have questions, contact them or your healthcare provider.
+              {t.aboutMedsDescription}
             </p>
           </div>
         </div>

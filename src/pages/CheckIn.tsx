@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import type { AppData } from '../App';
+import type { Translations } from '../App';
 
 interface Props {
-  data: AppData;
-  setData: React.Dispatch<React.SetStateAction<AppData>>;
+  data: any;
+  setData: React.Dispatch<React.SetStateAction<any>>;
   todayCheckIn?: { id: string; date: string; status: string; time: string };
   onNavigate: (page: 'home' | 'checkin' | 'meds' | 'messages' | 'health' | 'settings') => void;
+  t: Translations;
 }
 
-export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Props) {
+export default function CheckIn({ data, setData, todayCheckIn, onNavigate, t }: Props) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<'okay' | 'need_help' | null>(null);
 
@@ -28,7 +29,7 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
       time,
     };
 
-    setData(prev => ({
+    setData((prev: any) => ({
       ...prev,
       checkIns: [newCheckIn, ...prev.checkIns],
     }));
@@ -36,7 +37,7 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
     setShowConfirmation(false);
   };
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const today = new Date().toLocaleDateString(data.language === 'zh' ? 'zh-CN' : data.language === 'my' ? 'my-MM' : 'en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -44,27 +45,23 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
 
   return (
     <div>
-      {/* Header */}
       <div style={{ marginBottom: 'var(--space-xl)' }}>
         <button 
           className="btn btn-secondary"
           onClick={() => onNavigate('home')}
           style={{ marginBottom: 'var(--space-md)' }}
         >
-          ← Back
+          ← {t.back}
         </button>
-        <h1 className="section-title">❤️ Daily Check-In</h1>
+        <h1 className="section-title">❤️ {t.dailyCheckIn}</h1>
       </div>
 
-      {/* Date Display */}
       <div className="card" style={{ background: 'var(--color-primary)', color: 'white', marginBottom: 'var(--space-xl)' }}>
         <p style={{ textAlign: 'center', fontSize: 'var(--font-size-xl)' }}>{today}</p>
       </div>
 
-      {/* Check-In Card */}
       <div className="card">
         {todayCheckIn ? (
-          // Already checked in
           <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
             <div style={{ fontSize: 80, marginBottom: 'var(--space-lg)' }}>
               {todayCheckIn.status === 'okay' ? '✅' : '🆘'}
@@ -75,25 +72,22 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
                 : 'Help is on the way!'}
             </h2>
             <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xl)' }}>
-              Checked in at {todayCheckIn.time}
+              {t.checkedInAt} {todayCheckIn.time}
             </p>
             <button 
               className="btn btn-primary btn-lg btn-block"
               onClick={() => onNavigate('home')}
             >
-              🏠 Back to Home
+              🏠 {t.backToHome}
             </button>
           </div>
         ) : showConfirmation ? (
-          // Confirmation screen
           <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
             <div style={{ fontSize: 80, marginBottom: 'var(--space-lg)' }}>
               {selectedStatus === 'okay' ? '😊' : '🆘'}
             </div>
             <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
-              {selectedStatus === 'okay' 
-                ? "You're feeling okay?" 
-                : 'You need help?'}
+              {selectedStatus === 'okay' ? t.imOkay : t.iNeedHelp}
             </h2>
             <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xl)' }}>
               {selectedStatus === 'okay'
@@ -105,25 +99,24 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
                 className="btn btn-primary btn-lg btn-block"
                 onClick={confirmCheckIn}
               >
-                ✓ Yes, Confirm
+                ✓ {t.yesConfirm}
               </button>
               <button 
                 className="btn btn-secondary btn-lg btn-block"
                 onClick={() => setShowConfirmation(false)}
               >
-                ← Go Back
+                ← {t.goBack}
               </button>
             </div>
           </div>
         ) : (
-          // Check-in options
           <>
             <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
               <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-md)' }}>
-                👋 Hello! How are you feeling today?
+                👋 {t.howFeelingToday}
               </h2>
               <p style={{ color: 'var(--color-text-secondary)' }}>
-                Tap one of the buttons below to let your family know.
+                {t.tapBelow}
               </p>
             </div>
 
@@ -134,10 +127,8 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
               >
                 <span style={{ fontSize: 40, marginRight: 'var(--space-md)' }}>😊</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: 'var(--font-size-xl)' }}>I'm Okay</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9, marginTop: 4 }}>
-                    Feeling well, no concerns
-                  </div>
+                  <div style={{ fontSize: 'var(--font-size-xl)' }}>{t.imOkay}</div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9, marginTop: 4 }}>{t.feelingWell}</div>
                 </div>
               </button>
 
@@ -147,10 +138,8 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
               >
                 <span style={{ fontSize: 40, marginRight: 'var(--space-md)' }}>🆘</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: 'var(--font-size-xl)' }}>I Need Help</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9, marginTop: 4 }}>
-                    I have a concern or need assistance
-                  </div>
+                  <div style={{ fontSize: 'var(--font-size-xl)' }}>{t.iNeedHelp}</div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9, marginTop: 4 }}>{t.needAssistance}</div>
                 </div>
               </button>
             </div>
@@ -158,14 +147,13 @@ export default function CheckIn({ data, setData, todayCheckIn, onNavigate }: Pro
         )}
       </div>
 
-      {/* Info Card */}
-      <div className="card" style={{ background: 'var(--color-secondary-light)', background: 'rgba(78, 159, 159, 0.1)', marginTop: 'var(--space-lg)' }}>
+      <div className="card" style={{ background: 'rgba(78, 159, 159, 0.1)', marginTop: 'var(--space-lg)' }}>
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
           <span style={{ fontSize: 32 }}>💡</span>
           <div>
-            <h3 style={{ fontWeight: 600, marginBottom: 'var(--space-xs)' }}>Why Check-In Matters</h3>
+            <h3 style={{ fontWeight: 600, marginBottom: 'var(--space-xs)' }}>{t.whyCheckInMatters}</h3>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              A simple daily check-in gives your family peace of mind. It only takes a moment and helps them know you're doing well!
+              {t.checkInDescription}
             </p>
           </div>
         </div>

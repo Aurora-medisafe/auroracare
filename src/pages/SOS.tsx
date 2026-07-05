@@ -1,23 +1,27 @@
 import { useState, useRef, useEffect } from 'react';
-import type { AppData } from '../App';
+import type { Translations } from '../App';
 
 interface Props {
   onClose: () => void;
-  data: AppData;
-  setData: React.Dispatch<React.SetStateAction<AppData>>;
+  data: any;
+  setData: React.Dispatch<React.SetStateAction<any>>;
+  t: Translations;
 }
 
 type SOSState = 'idle' | 'holding' | 'confirming' | 'sent' | 'cancelled';
 
-export default function SOS({ onClose, data, setData }: Props) {
+export default function SOS({ onClose, data, setData, t }: Props) {
   const [state, setState] = useState<SOSState>('idle');
   const [holdProgress, setHoldProgress] = useState(0);
   const holdTimer = useRef<number | null>(null);
   const progressInterval = useRef<number | null>(null);
 
-  const HOLD_DURATION = 1500; // 1.5 seconds
+  const { contacts } = data;
+  const contact1 = contacts?.[0];
+  const contact2 = contacts?.[1];
+  
+  const HOLD_DURATION = 1200;
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (holdTimer.current) clearTimeout(holdTimer.current);
@@ -28,7 +32,6 @@ export default function SOS({ onClose, data, setData }: Props) {
   const startHold = () => {
     setState('holding');
     
-    // Progress update
     let elapsed = 0;
     progressInterval.current = window.setInterval(() => {
       elapsed += 50;
@@ -40,7 +43,6 @@ export default function SOS({ onClose, data, setData }: Props) {
       }
     }, 50);
 
-    // Vibration feedback
     if ('vibrate' in navigator) {
       navigator.vibrate(50);
     }
@@ -60,26 +62,23 @@ export default function SOS({ onClose, data, setData }: Props) {
     
     setState('confirming');
 
-    // Simulate sending alert
     setTimeout(() => {
       setState('sent');
       
-      // Store alert in data (would be sent to Firebase in production)
       const alert = {
         id: `sos-${Date.now()}`,
         date: new Date().toDateString(),
-        status: 'sent' as const,
+        status: 'sent',
         time: new Date().toLocaleTimeString(),
       };
 
-      setData(prev => ({
+      setData((prev: any) => ({
         ...prev,
         checkIns: [alert, ...prev.checkIns],
       }));
     }, 1500);
   };
 
-  // Handle sent state - auto close after delay
   useEffect(() => {
     if (state === 'sent') {
       const timer = setTimeout(() => {
@@ -89,48 +88,78 @@ export default function SOS({ onClose, data, setData }: Props) {
     }
   }, [state, onClose]);
 
-  // Sent state
   if (state === 'sent') {
     return (
       <div className="modal-overlay" style={{ background: 'var(--color-background)' }}>
         <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
           <div style={{ fontSize: 100, marginBottom: 'var(--space-xl)' }}>✅</div>
           <h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
-            SOS Sent!
+            {t.sosSent}
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xl)' }}>
-            Your family has been alerted and will help you soon.
+            {t.familyAlerted}
           </p>
+          
+          {/* Call Buttons After Sent */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            {contact1 && (
+              <a 
+                href={`tel:${contact1.phone}`}
+                className="btn btn-success btn-lg"
+                style={{ 
+                  minHeight: 80, 
+                  padding: 'var(--space-lg)',
+                  textDecoration: 'none',
+                  fontSize: 'var(--font-size-xl)'
+                }}
+              >
+                📞 Call 1: {contact1.phone}
+              </a>
+            )}
+            {contact2 && (
+              <a 
+                href={`tel:${contact2.phone}`}
+                className="btn btn-success btn-lg"
+                style={{ 
+                  minHeight: 80, 
+                  padding: 'var(--space-lg)',
+                  textDecoration: 'none',
+                  fontSize: 'var(--font-size-xl)'
+                }}
+              >
+                📞 Call 2: {contact2.phone}
+              </a>
+            )}
+          </div>
+          
           <button 
             className="btn btn-primary btn-lg"
             onClick={onClose}
-            style={{ minHeight: 80, padding: 'var(--space-lg) var(--space-xxl)' }}
+            style={{ minHeight: 80, padding: 'var(--space-lg) var(--space-xxl)', marginTop: 'var(--space-lg)' }}
           >
-            🏠 Back to Home
+            🏠 {t.backToHome}
           </button>
         </div>
       </div>
     );
   }
 
-  // Confirming state
   if (state === 'confirming') {
     return (
       <div className="modal-overlay" style={{ background: 'var(--color-background)' }}>
         <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
           <div style={{ fontSize: 100, marginBottom: 'var(--space-xl)' }}>📨</div>
           <h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700 }}>
-            Sending...
+            {t.sending}
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-md)' }}>
-            Alerting your family now.
+            {t.alertingFamily}
           </p>
         </div>
       </div>
     );
   }
 
-  // Idle/Holding state
   return (
     <div className="modal-overlay" style={{ background: 'var(--color-background)' }}>
       <div style={{ 
@@ -141,7 +170,6 @@ export default function SOS({ onClose, data, setData }: Props) {
         flexDirection: 'column',
         alignItems: 'center'
       }}>
-        {/* Close Button */}
         <button 
           className="modal-close"
           onClick={state === 'holding' ? cancelHold : onClose}
@@ -153,7 +181,6 @@ export default function SOS({ onClose, data, setData }: Props) {
           ✕
         </button>
 
-        {/* Title */}
         <h1 style={{ 
           fontSize: 'var(--font-size-3xl)', 
           fontWeight: 700, 
@@ -161,20 +188,17 @@ export default function SOS({ onClose, data, setData }: Props) {
           textAlign: 'center',
           marginBottom: 'var(--space-md)'
         }}>
-          Emergency SOS
+          {t.emergencySOS}
         </h1>
         
         <p style={{ 
           color: 'var(--color-text-secondary)', 
           textAlign: 'center',
-          marginBottom: 'var(--space-xxl)'
+          marginBottom: 'var(--space-xl)'
         }}>
-          {state === 'holding'
-            ? 'Keep holding to send alert...'
-            : 'Hold the button for 1.5 seconds to send emergency alert to your family'}
+          {state === 'holding' ? t.keepHolding : t.holdToActivate}
         </p>
 
-        {/* SOS Button */}
         <button
           className="sos-button btn-icon-lg"
           onMouseDown={startHold}
@@ -188,7 +212,6 @@ export default function SOS({ onClose, data, setData }: Props) {
           }}
           aria-label="Emergency SOS Button - Hold to activate"
         >
-          {/* Progress Ring */}
           {state === 'holding' && (
             <div style={{
               position: 'absolute',
@@ -203,7 +226,7 @@ export default function SOS({ onClose, data, setData }: Props) {
           
           <span style={{ position: 'relative', zIndex: 1 }}>🆘</span>
           <span style={{ fontSize: 18, marginTop: 4, position: 'relative', zIndex: 1 }}>
-            {state === 'holding' ? 'Sending...' : 'SOS'}
+            {state === 'holding' ? t.sending : 'SOS'}
           </span>
         </button>
 
@@ -213,20 +236,78 @@ export default function SOS({ onClose, data, setData }: Props) {
             marginTop: 'var(--space-xl)',
             fontSize: 'var(--font-size-lg)'
           }}>
-            Release to cancel
+            {t.releaseToCancel}
           </p>
         )}
 
-        {/* Info */}
-        <div className="card" style={{ marginTop: 'var(--space-xxl)', width: '100%' }}>
+        {/* Direct Call Buttons */}
+        <div style={{ marginTop: 'var(--space-xxl)', width: '100%' }}>
+          <h3 style={{ textAlign: 'center', marginBottom: 'var(--space-lg)', color: 'var(--color-text-secondary)' }}>
+            📞 Quick Call
+          </h3>
+          
+          {/* Call 1 */}
+          {contact1 && (
+            <a 
+              href={`tel:${contact1.phone}`}
+              style={{
+                display: 'block',
+                background: 'var(--color-success)',
+                color: 'white',
+                padding: 'var(--space-xl)',
+                borderRadius: 16,
+                marginBottom: 'var(--space-md)',
+                textDecoration: 'none',
+                textAlign: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }}
+            >
+              <div style={{ fontSize: 48, marginBottom: 'var(--space-sm)' }}>📞</div>
+              <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, marginBottom: 4 }}>
+                Call 1
+              </div>
+              <div style={{ fontSize: 'var(--font-size-lg)', opacity: 0.9 }}>
+                {contact1.phone}
+              </div>
+            </a>
+          )}
+          
+          {/* Call 2 */}
+          {contact2 && (
+            <a 
+              href={`tel:${contact2.phone}`}
+              style={{
+                display: 'block',
+                background: 'var(--color-secondary)',
+                color: 'white',
+                padding: 'var(--space-xl)',
+                borderRadius: 16,
+                marginBottom: 'var(--space-md)',
+                textDecoration: 'none',
+                textAlign: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }}
+            >
+              <div style={{ fontSize: 48, marginBottom: 'var(--space-sm)' }}>📞</div>
+              <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, marginBottom: 4 }}>
+                Call 2
+              </div>
+              <div style={{ fontSize: 'var(--font-size-lg)', opacity: 0.9 }}>
+                {contact2.phone}
+              </div>
+            </a>
+          )}
+        </div>
+
+        <div className="card" style={{ marginTop: 'var(--space-xl)', width: '100%' }}>
           <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
             <span style={{ fontSize: 24 }}>ℹ️</span>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-              <strong>When you send an SOS:</strong>
+              <strong>{t.whenYouSendSOS}</strong>
               <ul style={{ marginTop: 'var(--space-sm)', paddingLeft: 'var(--space-lg)' }}>
-                <li>• Emergency notification to family</li>
-                <li>• Your current location</li>
-                <li>• Direct link to contact you</li>
+                <li>• {t.emergencyNotification}</li>
+                <li>• {t.yourCurrentLocation}</li>
+                <li>• {t.directLink}</li>
               </ul>
             </div>
           </div>

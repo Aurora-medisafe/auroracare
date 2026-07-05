@@ -6,6 +6,7 @@ import Messages from './pages/Messages';
 import Health from './pages/Health';
 import Settings from './pages/Settings';
 import SOS from './pages/SOS';
+import { Language, getTranslations, getGreeting, languageNames, Translations } from './i18n';
 
 // Navigation icons
 const icons = {
@@ -22,6 +23,13 @@ type Page = 'home' | 'checkin' | 'meds' | 'messages' | 'health' | 'settings';
 
 // Store data in localStorage
 const STORAGE_KEY = 'protectus_data';
+
+interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  relationship: 'son' | 'daughter' | 'caregiver' | 'other';
+}
 
 interface AppData {
   user: {
@@ -56,13 +64,19 @@ interface AppData {
   }>;
   locationSharing: boolean;
   textSize: 'normal' | 'large' | 'extra-large';
+  language: Language;
+  contacts: Contact[];
 }
 
 const defaultData: AppData = {
   user: {
     name: 'there',
-    phone: '',
+    phone: '09668808686',
   },
+  contacts: [
+    { id: 'c1', name: 'Contact 1', phone: '09668808686', relationship: 'daughter' as const },
+    { id: 'c2', name: 'Contact 2', phone: '09962148088', relationship: 'son' as const },
+  ],
   checkIns: [],
   medications: [
     { id: '1', name: 'Metformin', dosage: '500mg', time: '08:00', taken: false },
@@ -88,6 +102,7 @@ const defaultData: AppData = {
   vitals: [],
   locationSharing: false,
   textSize: 'normal',
+  language: 'en',
 };
 
 // Load data from localStorage
@@ -95,7 +110,13 @@ const loadData = (): AppData => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return { ...defaultData, ...JSON.parse(stored) };
+      const parsed = JSON.parse(stored);
+      // Always ensure the correct contacts
+      parsed.contacts = [
+        { id: 'c1', name: 'Contact 1', phone: '09668808686', relationship: 'daughter' as const },
+        { id: 'c2', name: 'Contact 2', phone: '09962148088', relationship: 'son' as const },
+      ];
+      return { ...defaultData, ...parsed };
     }
   } catch (e) {
     console.error('Failed to load data:', e);
@@ -116,21 +137,20 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [showSOS, setShowSOS] = useState(false);
   const [data, setData] = useState<AppData>(loadData);
+  const [t, setT] = useState<Translations>(getTranslations(loadData().language));
+
+  // Update translations when language changes
+  useEffect(() => {
+    setT(getTranslations(data.language));
+  }, [data.language]);
 
   // Save data whenever it changes
   useEffect(() => {
     saveData(data);
   }, [data]);
 
-  // Get greeting based on time
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return { text: 'Good Morning', icon: '☀️' };
-    if (hour < 17) return { text: 'Good Afternoon', icon: '🌤️' };
-    return { text: 'Good Evening', icon: '🌙' };
-  };
-
-  const greeting = getGreeting();
+  // Get greeting based on time and language
+  const greeting = getGreeting(data.language);
 
   // Check if already checked in today
   const today = new Date().toDateString();
@@ -147,7 +167,7 @@ export default function App() {
   // Render current page
   const renderPage = () => {
     if (showSOS) {
-      return <SOS onClose={() => setShowSOS(false)} data={data} setData={setData} />;
+      return <SOS onClose={() => setShowSOS(false)} data={data} setData={setData} t={t} />;
     }
 
     switch (currentPage) {
@@ -161,6 +181,7 @@ export default function App() {
             pendingMeds={pendingMeds}
             onNavigate={navigate}
             onSOS={() => setShowSOS(true)}
+            t={t}
           />
         );
       case 'checkin':
@@ -170,16 +191,17 @@ export default function App() {
             setData={setData}
             todayCheckIn={todayCheckIn}
             onNavigate={navigate}
+            t={t}
           />
         );
       case 'meds':
-        return <Medications data={data} setData={setData} onNavigate={navigate} />;
+        return <Medications data={data} setData={setData} onNavigate={navigate} t={t} />;
       case 'messages':
-        return <Messages data={data} setData={setData} onNavigate={navigate} />;
+        return <Messages data={data} setData={setData} onNavigate={navigate} t={t} />;
       case 'health':
-        return <Health data={data} setData={setData} onNavigate={navigate} />;
+        return <Health data={data} setData={setData} onNavigate={navigate} t={t} />;
       case 'settings':
-        return <Settings data={data} setData={setData} />;
+        return <Settings data={data} setData={setData} t={t} setT={setT} />;
       default:
         return null;
     }
@@ -192,7 +214,7 @@ export default function App() {
         <div className="header-content">
           <div className="header-title">
             <span className="header-logo">💝</span>
-            <span>Protect Us</span>
+            <span>{t.appName}</span>
           </div>
           <button
             onClick={() => setShowSOS(true)}
@@ -219,7 +241,7 @@ export default function App() {
           aria-current={currentPage === 'home' ? 'page' : undefined}
         >
           <span className="nav-icon">{icons.home}</span>
-          <span>Home</span>
+          <span>{t.home}</span>
         </button>
         <button
           className={`nav-item ${currentPage === 'checkin' ? 'active' : ''}`}
@@ -227,7 +249,7 @@ export default function App() {
           aria-current={currentPage === 'checkin' ? 'page' : undefined}
         >
           <span className="nav-icon">{icons.checkin}</span>
-          <span>Check-In</span>
+          <span>{t.checkIn}</span>
         </button>
         <button
           className={`nav-item ${currentPage === 'meds' ? 'active' : ''}`}
@@ -235,7 +257,7 @@ export default function App() {
           aria-current={currentPage === 'meds' ? 'page' : undefined}
         >
           <span className="nav-icon">{icons.meds}</span>
-          <span>Meds</span>
+          <span>{t.meds}</span>
           {pendingMeds > 0 && (
             <span className="badge badge-danger" style={{ position: 'absolute', top: 0, right: 8, fontSize: 10, padding: '2px 6px' }}>
               {pendingMeds}
@@ -248,7 +270,7 @@ export default function App() {
           aria-current={currentPage === 'messages' ? 'page' : undefined}
         >
           <span className="nav-icon">{icons.messages}</span>
-          <span>Messages</span>
+          <span>{t.messages}</span>
           {unreadMessages > 0 && (
             <span className="badge badge-danger" style={{ position: 'absolute', top: 0, right: 8, fontSize: 10, padding: '2px 6px' }}>
               {unreadMessages}
@@ -261,9 +283,11 @@ export default function App() {
           aria-current={currentPage === 'settings' ? 'page' : undefined}
         >
           <span className="nav-icon">{icons.settings}</span>
-          <span>Settings</span>
+          <span>{t.settings}</span>
         </button>
       </nav>
     </div>
   );
 }
+
+export type { Translations };

@@ -10,6 +10,7 @@
 
 - 📱 **Mobile-First Design** — Optimized for phones and tablets
 - ♿ **Senior-Friendly UI** — Large buttons, big text, high contrast
+- 🌍 **Multi-Language** — English, Chinese, Burmese supported
 - 🆘 **SOS Emergency Button** — Hold for 1.5 seconds to alert family
 - ❤️ **Daily Check-In** — Let family know you're okay
 - 💊 **Medication Tracking** — Mark medications as taken

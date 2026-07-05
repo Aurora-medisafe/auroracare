@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import type { AppData } from '../App';
+import type { Translations } from '../App';
 
 interface Props {
-  data: AppData;
-  setData: React.Dispatch<React.SetStateAction<AppData>>;
+  data: any;
+  setData: React.Dispatch<React.SetStateAction<any>>;
   onNavigate: (page: 'home' | 'checkin' | 'meds' | 'messages' | 'health' | 'settings') => void;
+  t: Translations;
 }
 
 type VitalType = 'blood_pressure' | 'heart_rate' | 'temperature' | 'weight' | 'blood_glucose';
@@ -12,20 +13,20 @@ type VitalType = 'blood_pressure' | 'heart_rate' | 'temperature' | 'weight' | 'b
 interface VitalConfig {
   type: VitalType;
   icon: string;
-  label: string;
+  labelKey: keyof Translations;
   placeholder: string;
-  unit: string;
+  unitKey: keyof Translations;
 }
 
 const VITAL_CONFIGS: VitalConfig[] = [
-  { type: 'blood_pressure', icon: '🩸', label: 'Blood Pressure', placeholder: '120/80', unit: 'mmHg' },
-  { type: 'heart_rate', icon: '❤️', label: 'Heart Rate', placeholder: '72', unit: 'bpm' },
-  { type: 'temperature', icon: '🌡️', label: 'Temperature', placeholder: '98.6', unit: '°F' },
-  { type: 'weight', icon: '⚖️', label: 'Weight', placeholder: '150', unit: 'lbs' },
-  { type: 'blood_glucose', icon: '🩺', label: 'Blood Glucose', placeholder: '100', unit: 'mg/dL' },
+  { type: 'blood_pressure', icon: '🩸', labelKey: 'bloodPressure', placeholder: '120/80', unitKey: 'bloodPressure' },
+  { type: 'heart_rate', icon: '❤️', labelKey: 'heartRate', placeholder: '72', unitKey: 'heartRate' },
+  { type: 'temperature', icon: '🌡️', labelKey: 'temperature', placeholder: '98.6', unitKey: 'temperature' },
+  { type: 'weight', icon: '⚖️', labelKey: 'weight', placeholder: '150', unitKey: 'weight' },
+  { type: 'blood_glucose', icon: '🩺', labelKey: 'bloodGlucose', placeholder: '100', unitKey: 'bloodGlucose' },
 ];
 
-export default function Health({ data, setData, onNavigate }: Props) {
+export default function Health({ data, setData, onNavigate, t }: Props) {
   const { vitals } = data;
   const [showModal, setShowModal] = useState(false);
   const [selectedVital, setSelectedVital] = useState<VitalConfig | null>(null);
@@ -47,53 +48,61 @@ export default function Health({ data, setData, onNavigate }: Props) {
       time: new Date().toLocaleString(),
     };
 
-    setData(prev => ({
+    setData((prev: any) => ({
       ...prev,
       vitals: [newVital, ...prev.vitals],
     }));
 
     setShowModal(false);
     setInputValue('');
-    alert(`✅ ${selectedVital.label} recorded!`);
+    alert(`✅ ${t[(selectedVital.labelKey as keyof Translations)]} recorded!`);
   };
 
   const getLatestVital = (type: VitalType) => {
-    return vitals.find(v => v.type === type);
+    return vitals.find((v: any) => v.type === type);
+  };
+
+  const getUnit = (labelKey: keyof Translations): string => {
+    const units: Record<string, string> = {
+      bloodPressure: 'mmHg',
+      heartRate: 'bpm',
+      temperature: '°F',
+      weight: 'lbs',
+      bloodGlucose: 'mg/dL',
+    };
+    return units[labelKey] || '';
   };
 
   return (
     <div>
-      {/* Header */}
       <div style={{ marginBottom: 'var(--space-xl)' }}>
         <button 
           className="btn btn-secondary"
           onClick={() => onNavigate('home')}
           style={{ marginBottom: 'var(--space-md)' }}
         >
-          ← Back
+          ← {t.back}
         </button>
-        <h1 className="section-title">📊 My Health Vitals</h1>
+        <h1 className="section-title">📊 {t.myHealthVitals}</h1>
       </div>
 
-      {/* Info Card */}
       <div className="card" style={{ background: 'rgba(78, 159, 159, 0.1)', marginBottom: 'var(--space-xl)' }}>
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
           <span style={{ fontSize: 32 }}>💡</span>
           <div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Track your health vitals here. Your family can see these readings to help monitor your health.
+              {t.vitalsDescription}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Record New Reading */}
       <div className="section">
         <h2 className="section-title" style={{ marginBottom: 'var(--space-md)' }}>
-          Record New Reading
+          {t.recordNewReading}
         </h2>
 
-        {VITAL_CONFIGS.map(vital => {
+        {VITAL_CONFIGS.map((vital) => {
           const latest = getLatestVital(vital.type);
           return (
             <div key={vital.type} className="card" style={{ marginBottom: 'var(--space-md)' }}>
@@ -101,8 +110,12 @@ export default function Health({ data, setData, onNavigate }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
                   <span style={{ fontSize: 40 }}>{vital.icon}</span>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 'var(--font-size-lg)' }}>{vital.label}</div>
-                    <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>{vital.unit}</div>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--font-size-lg)' }}>
+                      {t[(vital.labelKey as keyof Translations)]}
+                    </div>
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
+                      {getUnit(vital.labelKey)}
+                    </div>
                   </div>
                 </div>
 
@@ -121,7 +134,7 @@ export default function Health({ data, setData, onNavigate }: Props) {
                     onClick={() => openModal(vital)}
                     style={{ minHeight: 56, padding: '12px 20px' }}
                   >
-                    + Add
+                    + {t.saveReading}
                   </button>
                 )}
               </div>
@@ -132,7 +145,7 @@ export default function Health({ data, setData, onNavigate }: Props) {
                   onClick={() => openModal(vital)}
                   style={{ marginTop: 'var(--space-md)', minHeight: 48 }}
                 >
-                  📝 Update Reading
+                  📝 {t.updateReading}
                 </button>
               )}
             </div>
@@ -140,15 +153,14 @@ export default function Health({ data, setData, onNavigate }: Props) {
         })}
       </div>
 
-      {/* Recent History */}
       {vitals.length > 0 && (
         <div className="section" style={{ marginTop: 'var(--space-xl)' }}>
           <h2 className="section-title" style={{ marginBottom: 'var(--space-md)' }}>
-            Recent History
+            {t.recentHistory}
           </h2>
           
-          {vitals.slice(0, 5).map(vital => {
-            const config = VITAL_CONFIGS.find(c => c.type === vital.type);
+          {vitals.slice(0, 5).map((vital: any) => {
+            const config = VITAL_CONFIGS.find((c) => c.type === vital.type);
             return (
               <div 
                 key={vital.id} 
@@ -159,14 +171,16 @@ export default function Health({ data, setData, onNavigate }: Props) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
                     <span style={{ fontSize: 24 }}>{config?.icon}</span>
                     <div>
-                      <div style={{ fontWeight: 600 }}>{config?.label}</div>
+                      <div style={{ fontWeight: 600 }}>
+                        {config ? t[(config.labelKey as keyof Translations)] : vital.type}
+                      </div>
                       <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>
                         {vital.time}
                       </div>
                     </div>
                   </div>
                   <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-primary)' }}>
-                    {vital.value} {config?.unit}
+                    {vital.value} {config ? getUnit(config.labelKey) : ''}
                   </div>
                 </div>
               </div>
@@ -175,20 +189,19 @@ export default function Health({ data, setData, onNavigate }: Props) {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && selectedVital && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">
                 <span style={{ marginRight: 8 }}>{selectedVital.icon}</span>
-                {selectedVital.label}
+                {t[(selectedVital.labelKey as keyof Translations)]}
               </h2>
               <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
 
             <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>
-              Enter your {selectedVital.label.toLowerCase()} reading
+              Enter your {selectedVital.placeholder} reading
             </p>
 
             <div className="form-group">
@@ -198,12 +211,12 @@ export default function Health({ data, setData, onNavigate }: Props) {
                   className="form-input"
                   placeholder={selectedVital.placeholder}
                   value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
+                  onChange={(e) => setInputValue(e.target.value)}
                   autoFocus
                   style={{ flex: 1, fontSize: 'var(--font-size-2xl)', textAlign: 'center' }}
                 />
                 <span style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-text-muted)' }}>
-                  {selectedVital.unit}
+                  {getUnit(selectedVital.labelKey)}
                 </span>
               </div>
             </div>
@@ -214,7 +227,7 @@ export default function Health({ data, setData, onNavigate }: Props) {
               disabled={!inputValue.trim()}
               style={{ marginTop: 'var(--space-lg)' }}
             >
-              💾 Save Reading
+              💾 {t.saveReading}
             </button>
           </div>
         </div>
