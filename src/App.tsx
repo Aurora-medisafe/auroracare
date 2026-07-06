@@ -48,6 +48,7 @@ interface AppData {
     dosage: string;
     time: string;
     taken: boolean;
+    reminderEnabled?: boolean;
   }>;
   messages: Array<{
     id: string;
@@ -79,9 +80,9 @@ const defaultData: AppData = {
   ],
   checkIns: [],
   medications: [
-    { id: '1', name: 'Metformin', dosage: '500mg', time: '08:00', taken: false },
-    { id: '2', name: 'Aspirin', dosage: '81mg', time: '08:00', taken: false },
-    { id: '3', name: 'Lisinopril', dosage: '10mg', time: '20:00', taken: false },
+    { id: '1', name: 'Metformin', dosage: '500mg', time: '08:00', taken: false, reminderEnabled: true },
+    { id: '2', name: 'Aspirin', dosage: '81mg', time: '08:00', taken: false, reminderEnabled: true },
+    { id: '3', name: 'Lisinopril', dosage: '10mg', time: '20:00', taken: false, reminderEnabled: true },
   ],
   messages: [
     {
@@ -116,6 +117,13 @@ const loadData = (): AppData => {
         { id: 'c1', name: 'Contact 1', phone: '09668808686', relationship: 'daughter' as const },
         { id: 'c2', name: 'Contact 2', phone: '09962148088', relationship: 'son' as const },
       ];
+      // Ensure medications have reminderEnabled
+      if (parsed.medications) {
+        parsed.medications = parsed.medications.map((m: any) => ({
+          ...m,
+          reminderEnabled: m.reminderEnabled !== undefined ? m.reminderEnabled : true,
+        }));
+      }
       return { ...defaultData, ...parsed };
     }
   } catch (e) {

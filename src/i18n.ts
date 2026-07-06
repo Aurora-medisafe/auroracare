@@ -50,6 +50,15 @@ export interface Translations {
   allTakenToday: string;
   aboutMedications: string;
   aboutMedsDescription: string;
+  addMedication: string;
+  enableReminders: string;
+  reminderOn: string;
+  reminderOff: string;
+  addNewMedication: string;
+  medicationName: string;
+  dosage: string;
+  time: string;
+  deleteMedication: string;
   
   // Messages
   familyMessagesTitle: string;
@@ -193,6 +202,15 @@ const translations: Record<Language, Translations> = {
     allTakenToday: "You've taken all your medications today.",
     aboutMedications: 'About Medications',
     aboutMedsDescription: 'Your medications are managed by your family. Contact them or your healthcare provider if you have questions.',
+    addMedication: 'Add Medication',
+    enableReminders: 'Enable Reminders',
+    reminderOn: 'Reminder On',
+    reminderOff: 'Reminder Off',
+    addNewMedication: 'Add New Medication',
+    medicationName: 'Medication name',
+    dosage: 'Dosage',
+    time: 'Time',
+    deleteMedication: 'Delete Medication',
     
     // Messages
     familyMessagesTitle: 'Messages',
@@ -335,6 +353,15 @@ const translations: Record<Language, Translations> = {
     allTakenToday: '您今天已经服用了所有药物。',
     aboutMedications: '关于用药',
     aboutMedsDescription: '您的用药由家人管理。如有问题，请联系家人或医疗服务提供者。',
+    addMedication: '添加用药',
+    enableReminders: '开启提醒',
+    reminderOn: '提醒已开启',
+    reminderOff: '提醒已关闭',
+    addNewMedication: '添加新药物',
+    medicationName: '药物名称',
+    dosage: '剂量',
+    time: '时间',
+    deleteMedication: '删除药物',
     
     // Messages
     familyMessagesTitle: '消息',
@@ -477,6 +504,15 @@ const translations: Record<Language, Translations> = {
     allTakenToday: 'ယနေ့ဆေးအားလုံးသောက်ပြီးပါပြီ။',
     aboutMedications: 'ဆေးဝါးအကြောင်း',
     aboutMedsDescription: 'သင့်ဆေးဝါးများကို မိသားစုကစီမံပါသည်။',
+    addMedication: 'ဆေးထည့်သွင်းမည်',
+    enableReminders: 'သတိပေးချက်ဖွင့်မည်',
+    reminderOn: 'သတိပေးချက်ဖွင့်ထားသည်',
+    reminderOff: 'သတိပေးချက်ပိတ်ထားသည်',
+    addNewMedication: 'ဆေးအသစ်ထည့်သွင်းမည်',
+    medicationName: 'ဆေးအမည်',
+    dosage: 'ပမာဏ',
+    time: 'အချိန်',
+    deleteMedication: 'ဆေးဖျက်မည်',
     
     // Messages
     familyMessagesTitle: 'မက်ဆိုက်များ',
